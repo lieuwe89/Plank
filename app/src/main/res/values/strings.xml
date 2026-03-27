@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Plank Tracker</string>
+    <string name="reminder_channel_name">Daily Plank Reminder</string>
+    <string name="reminder_channel_description">Reminds you to do your daily plank</string>
+</resources>
