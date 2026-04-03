@@ -71,13 +71,8 @@ class PlankViewModel(application: Application) : AndroidViewModel(application) {
                 val allRecords = values[6] as List<PlankRecord>
                 val todayRecord = values[7] as PlankRecord?
 
-                val daysSinceStart = ChronoUnit.DAYS.between(
-                    LocalDate.ofEpochDay(startDate / 86400000L),
-                    LocalDate.now()
-                ).coerceAtLeast(0)
-
-                val todayTarget = baseTarget + (daysSinceStart * dailyIncrement).toInt()
                 val streak = calculateStreak(allRecords)
+                val todayTarget = baseTarget + (streak * dailyIncrement)
                 val bestDuration = allRecords.maxOfOrNull { it.durationSeconds } ?: 0
 
                 PlankUiState(

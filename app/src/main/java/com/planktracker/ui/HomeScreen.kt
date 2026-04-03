@@ -10,7 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Whatshot
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -115,7 +115,7 @@ fun HomeScreen(vm: PlankViewModel, onStartPlank: () -> Unit) {
         ) {
             StatCard(
                 modifier = Modifier.weight(1f),
-                icon = { Icon(Icons.Default.LocalFireDepartment, contentDescription = null, tint = PlankOrange) },
+                icon = { Icon(Icons.Default.Whatshot, contentDescription = null, tint = PlankOrange) },
                 value = "${state.streak}",
                 label = "Day Streak"
             )
