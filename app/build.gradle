@@ -40,8 +40,6 @@ android {
 
     buildFeatures {
         compose true
-        // Explicitly setting these to false as they will be default false in AGP 10.0
-        // and are not used in this project.
         buildConfig = false
         resValues = false
     }
@@ -67,15 +65,11 @@ dependencies {
     implementation 'androidx.navigation:navigation-compose:2.8.7'
     implementation 'com.google.android.material:material:1.12.0'
 
-    // Room
     implementation 'androidx.room:room-runtime:2.7.0-alpha13'
     implementation 'androidx.room:room-ktx:2.7.0-alpha13'
     ksp 'androidx.room:room-compiler:2.7.0-alpha13'
 
-    // DataStore
     implementation 'androidx.datastore:datastore-preferences:1.1.2'
-
-    // Coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
 
     debugImplementation 'androidx.compose.ui:ui-tooling'

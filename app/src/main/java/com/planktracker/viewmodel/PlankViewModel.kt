@@ -13,7 +13,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import java.time.temporal.ChronoUnit
 
 enum class TimerState { IDLE, RUNNING, PAUSED, STOPPED }
 
@@ -43,6 +42,15 @@ class PlankViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<PlankUiState> = _uiState.asStateFlow()
 
     private var timerJob: Job? = null
+    
+    // Reactive today date string
+    private val todayFlow = flow {
+        while (true) {
+            emit(LocalDate.now().toString())
+            delay(1000 * 60) // Check every minute for date change
+        }
+    }.distinctUntilChanged()
+
     private val today get() = LocalDate.now().toString()
 
     init {
@@ -54,31 +62,60 @@ class PlankViewModel(application: Application) : AndroidViewModel(application) {
             combine(
                 prefs.baseTarget,
                 prefs.dailyIncrement,
-                prefs.startDate,
                 prefs.reminderHour,
                 prefs.reminderMinute,
                 prefs.reminderEnabled,
                 db.getAllRecords(),
-                db.observeRecordForDate(today)
+                todayFlow,
+                prefs.startDate
             ) { values ->
                 val baseTarget = values[0] as Int
                 val dailyIncrement = values[1] as Int
-                val startDate = values[2] as Long
-                val reminderHour = values[3] as Int
-                val reminderMinute = values[4] as Int
-                val reminderEnabled = values[5] as Boolean
+                val reminderHour = values[2] as Int
+                val reminderMinute = values[3] as Int
+                val reminderEnabled = values[4] as Boolean
                 @Suppress("UNCHECKED_CAST")
-                val allRecords = values[6] as List<PlankRecord>
-                val todayRecord = values[7] as PlankRecord?
+                val allRecords = values[5] as List<PlankRecord>
+                val currentDate = values[6] as String
+                val startDate = values[7] as Long?
 
-                val streak = calculateStreak(allRecords)
-                val todayTarget = baseTarget + (streak * dailyIncrement)
+                if (startDate == null) {
+                    viewModelScope.launch { prefs.setStartDate(System.currentTimeMillis()) }
+                }
+
+                val todayRecord = allRecords.find { it.date == currentDate }
+                
+                // Target should be based on the streak of days completed BEFORE today.
+                // This keeps the target stable for the entire day.
+                val recordDates = allRecords.map { LocalDate.parse(it.date) }.toSortedSet()
+                
+                // For target, we only look at records from YESTERDAY and before.
+                val yesterday = LocalDate.parse(currentDate).minusDays(1)
+                var streakForTarget = 0
+                var checkDate = yesterday
+                while (recordDates.contains(checkDate)) {
+                    streakForTarget++
+                    checkDate = checkDate.minusDays(1)
+                }
+                
+                val todayTarget = baseTarget + (streakForTarget * dailyIncrement)
                 val bestDuration = allRecords.maxOfOrNull { it.durationSeconds } ?: 0
+                
+                // Current streak (includes today if done)
+                var currentStreak = 0
+                var checkDateStreak = LocalDate.parse(currentDate)
+                if (!recordDates.contains(checkDateStreak)) {
+                    checkDateStreak = checkDateStreak.minusDays(1)
+                }
+                while (recordDates.contains(checkDateStreak)) {
+                    currentStreak++
+                    checkDateStreak = checkDateStreak.minusDays(1)
+                }
 
                 PlankUiState(
                     todayTarget = todayTarget,
                     todayRecord = todayRecord,
-                    streak = streak,
+                    streak = currentStreak,
                     bestDuration = bestDuration,
                     totalPlanks = allRecords.size,
                     elapsedSeconds = _uiState.value.elapsedSeconds,
@@ -94,24 +131,6 @@ class PlankViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.value = state
             }
         }
-    }
-
-    private fun calculateStreak(records: List<PlankRecord>): Int {
-        if (records.isEmpty()) return 0
-        val recordDates = records.map { LocalDate.parse(it.date) }.toSortedSet()
-        var streak = 0
-        var checkDate = LocalDate.now()
-
-        // if today is not done, start checking from yesterday
-        if (!recordDates.contains(checkDate)) {
-            checkDate = checkDate.minusDays(1)
-        }
-
-        while (recordDates.contains(checkDate)) {
-            streak++
-            checkDate = checkDate.minusDays(1)
-        }
-        return streak
     }
 
     fun startTimer() {

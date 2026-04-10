@@ -25,7 +25,7 @@ class PreferencesManager(private val context: Context) {
     val reminderEnabled: Flow<Boolean> = context.dataStore.data.map { it[REMINDER_ENABLED] ?: false }
     val dailyIncrement: Flow<Int> = context.dataStore.data.map { it[DAILY_INCREMENT] ?: 5 }
     val baseTarget: Flow<Int> = context.dataStore.data.map { it[BASE_TARGET] ?: 30 }
-    val startDate: Flow<Long> = context.dataStore.data.map { it[START_DATE] ?: System.currentTimeMillis() }
+    val startDate: Flow<Long?> = context.dataStore.data.map { it[START_DATE] }
 
     suspend fun setReminderTime(hour: Int, minute: Int) {
         context.dataStore.edit { prefs ->
