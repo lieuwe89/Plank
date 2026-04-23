@@ -65,7 +65,7 @@ _Coming soon_
 | Async | **Kotlin Coroutines + Flow** |
 | Architecture | MVVM — single `PlankViewModel` with `StateFlow<PlankUiState>` |
 | Notifications | `AlarmManager` + `NotificationCompat` |
-| Theme | Dark-only Material 3 colour scheme |
+| Theme | Custom Light-mode "Paper" Editorial Design |
 | Min SDK | **26** (Android 8.0) |
 | Target SDK | **35** |
 
@@ -130,7 +130,7 @@ cd Plank
 A release APK is included in the repo root for quick side-loading:
 
 ```
-PlankTrackerv3.apk
+PlankTrackerv2.apk
 ```
 
 ---

@@ -1,0 +1,6 @@
+*.hprof
+*.apk
+build.log
+.idea/
+.gradle/
+build/

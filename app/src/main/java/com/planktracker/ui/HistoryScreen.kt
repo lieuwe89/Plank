@@ -4,11 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -17,17 +12,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.planktracker.data.PlankRecord
-import com.planktracker.ui.theme.PlankGreen
-import com.planktracker.ui.theme.PlankRed
+import com.planktracker.ui.theme.*
 import com.planktracker.viewmodel.PlankViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @Composable
 fun HistoryScreen(vm: PlankViewModel) {
     val state by vm.uiState.collectAsState()
-    val records = state.allRecords
+    val records = state.allRecords.sortedByDescending { it.date }
 
     Column(
         modifier = Modifier
@@ -35,53 +31,121 @@ fun HistoryScreen(vm: PlankViewModel) {
             .background(MaterialTheme.colorScheme.background)
     ) {
         // Header
-        Column(modifier = Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
+        Column(modifier = Modifier.padding(horizontal = 22.dp, vertical = 20.dp)) {
             Text(
-                "History",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground
+                "ALL SESSIONS",
+                fontFamily = PlusJakartaSans,
+                fontSize = 10.sp,
+                color = PaperInk2,
+                fontWeight = FontWeight.SemiBold,
+                letterSpacing = 0.1.sp
             )
             Text(
-                "${records.size} plank${if (records.size != 1) "s" else ""} logged",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                "History",
+                fontFamily = InstrumentSerif,
+                fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                fontSize = 32.sp,
+                color = PaperInk,
+                lineHeight = 40.sp,
+                modifier = Modifier.padding(top = 4.dp)
             )
         }
 
-        if (records.isEmpty()) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        Icons.Default.EmojiEvents,
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(Modifier.height(16.dp))
-                    Text(
-                        "No planks yet",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        "Complete your first plank to see history",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+        HorizontalDivider(thickness = 2.dp, color = PaperInk, modifier = Modifier.padding(horizontal = 22.dp))
+
+        if (records.isNotEmpty()) {
+            val recentRecords = records.take(8).reversed()
+            val maxDuration = recentRecords.maxOfOrNull { it.durationSeconds } ?: 1
+
+            Column(modifier = Modifier.padding(horizontal = 22.dp, vertical = 16.dp)) {
+                Text(
+                    "LAST ${recentRecords.size} SESSIONS",
+                    fontFamily = PlusJakartaSans,
+                    fontSize = 9.sp,
+                    color = PaperInk3,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 0.1.sp
+                )
+                
+                // Sparkline Chart
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp)
+                        .padding(top = 12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    recentRecords.forEach { record ->
+                        val metTarget = record.metTarget
+                        val heightFraction = (record.durationSeconds.toFloat() / maxDuration).coerceIn(0.1f, 1f)
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .fillMaxHeight(heightFraction)
+                                .padding(horizontal = 2.dp)
+                                .background(if (metTarget) PaperAccent else PaperInk3.copy(alpha = 0.5f))
+                        )
+                    }
+                }
+                
+                // Chart Labels
+                if (recentRecords.isNotEmpty()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        val firstDate = LocalDate.parse(recentRecords.first().date).format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())).lowercase()
+                        val lastDate = LocalDate.parse(recentRecords.last().date).format(DateTimeFormatter.ofPattern("MMM d", Locale.getDefault())).lowercase()
+                        
+                        Text(
+                            firstDate,
+                            fontFamily = PlusJakartaSans,
+                            fontSize = 9.sp,
+                            color = PaperInk3
+                        )
+                        Text(
+                            lastDate,
+                            fontFamily = PlusJakartaSans,
+                            fontSize = 9.sp,
+                            color = PaperInk3
+                        )
+                    }
                 }
             }
-        } else {
+
+            HorizontalDivider(thickness = 2.dp, color = PaperInk, modifier = Modifier.padding(horizontal = 22.dp))
+
+            // List
+            Text(
+                "${records.size} PLANKS LOGGED",
+                fontFamily = PlusJakartaSans,
+                fontSize = 9.sp,
+                color = PaperInk2,
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 0.12.sp,
+                modifier = Modifier.padding(horizontal = 22.dp, vertical = 16.dp)
+            )
+
             LazyColumn(
-                contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
+                contentPadding = PaddingValues(horizontal = 22.dp, vertical = 0.dp)
             ) {
                 items(records, key = { it.id }) { record ->
                     PlankHistoryItem(record = record)
                 }
-                item { Spacer(Modifier.height(8.dp)) }
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    "No planks yet",
+                    fontFamily = InstrumentSerif,
+                    fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
+                    fontSize = 24.sp,
+                    color = PaperInk3
+                )
             }
         }
     }
@@ -90,69 +154,64 @@ fun HistoryScreen(vm: PlankViewModel) {
 @Composable
 fun PlankHistoryItem(record: PlankRecord) {
     val date = LocalDate.parse(record.date)
-    val dateStr = date.format(DateTimeFormatter.ofPattern("EEE, MMM d, yyyy"))
+    val dateStr = date.format(DateTimeFormatter.ofPattern("EE d MMM", Locale.getDefault())).lowercase()
     val metTarget = record.metTarget
 
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
-        modifier = Modifier.fillMaxWidth()
-    ) {
+    Column(modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
         Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
         ) {
-            // Status icon
-            Icon(
-                imageVector = if (metTarget) Icons.Default.CheckCircle else Icons.Default.Cancel,
-                contentDescription = null,
-                tint = if (metTarget) PlankGreen else PlankRed,
-                modifier = Modifier.size(28.dp)
+            Text(
+                text = dateStr,
+                fontFamily = PlusJakartaSans,
+                fontSize = 13.sp,
+                color = PaperInk,
+                fontWeight = FontWeight.Medium
             )
-
-            Spacer(Modifier.width(12.dp))
-
-            // Date and info
-            Column(modifier = Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.Bottom) {
                 Text(
-                    text = dateStr,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    text = "${record.durationSeconds}s",
+                    fontFamily = CormorantGaramond,
+                    fontSize = 18.sp,
+                    color = PaperInk,
+                    modifier = Modifier.padding(end = 6.dp)
                 )
+                val diff = record.durationSeconds - record.targetSeconds
+                val diffText = if (diff >= 0) "+${diff}s" else "${diff}s"
+                val diffColor = if (diff >= 0) PaperAccent else PaperDanger
                 Text(
-                    text = "Target: ${formatTime(record.targetSeconds)}",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            // Duration
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = formatTime(record.durationSeconds),
-                    style = MaterialTheme.typography.titleLarge,
+                    text = diffText,
+                    fontFamily = PlusJakartaSans,
+                    fontSize = 10.sp,
+                    color = diffColor,
                     fontWeight = FontWeight.Bold,
-                    color = if (metTarget) PlankGreen else MaterialTheme.colorScheme.onSurface
+                    modifier = Modifier.padding(bottom = 2.dp)
                 )
-                if (metTarget) {
-                    val extra = record.durationSeconds - record.targetSeconds
-                    if (extra > 0) {
-                        Text(
-                            text = "+${extra}s",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = PlankGreen
-                        )
-                    }
-                } else {
-                    val short = record.targetSeconds - record.durationSeconds
-                    Text(
-                        text = "-${short}s",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = PlankRed
-                    )
-                }
             }
         }
+        
+        Box(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) {
+            Box(modifier = Modifier.fillMaxWidth().height(2.dp).background(PaperLine))
+            val progress = (record.durationSeconds.toFloat() / record.targetSeconds).coerceIn(0f, 1f)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth(fraction = progress)
+                    .height(2.dp)
+                    .background(if (metTarget) PaperAccent else PaperInk3)
+            )
+        }
+        
+        Text(
+            text = "Target: ${record.targetSeconds}s",
+            fontFamily = PlusJakartaSans,
+            fontSize = 9.sp,
+            color = PaperInk3,
+            fontWeight = FontWeight.Medium
+        )
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        HorizontalDivider(thickness = 1.dp, color = PaperLine)
     }
 }
