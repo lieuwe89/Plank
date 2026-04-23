@@ -17,6 +17,7 @@ A minimalist Android app that helps you build a daily plank exercise habit throu
 - **Start / Pause / Resume / Stop** controls
 - Real-time "seconds to go" countdown toward today's target
 - Visual colour change (green) when the goal is reached
+- **Screen stays on** while the timer is running or paused — no more accidental lock-outs mid-plank
 - Save or discard dialog after stopping, with a summary of performance
 
 ### 📊 History
@@ -129,7 +130,7 @@ cd Plank
 A release APK is included in the repo root for quick side-loading:
 
 ```
-PlankTrackerv2.apk
+PlankTrackerv3.apk
 ```
 
 ---

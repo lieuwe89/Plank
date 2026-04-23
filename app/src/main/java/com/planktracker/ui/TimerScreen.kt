@@ -1,5 +1,7 @@
 package com.planktracker.ui
 
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -36,6 +38,20 @@ fun TimerScreen(vm: PlankViewModel, onBack: () -> Unit) {
 
     var showSaveDialog by remember { mutableStateOf(false) }
     var showDiscardDialog by remember { mutableStateOf(false) }
+
+    // Keep screen on while the timer is active (running or paused)
+    val keepScreenOn = state.timerState == TimerState.RUNNING || state.timerState == TimerState.PAUSED
+    val activity = LocalActivity.current
+    DisposableEffect(keepScreenOn) {
+        if (keepScreenOn) {
+            activity?.window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        } else {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+        onDispose {
+            activity?.window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        }
+    }
 
     // Navigate back after saving
     LaunchedEffect(state.timerState) {
